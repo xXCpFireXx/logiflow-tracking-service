@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class Tracking {
-    private final String id;
-    private final String shipmentId;
-    private final String trackingId;
+    private final String id;         // ID técnico de MongoDB
+    private final String shipmentId; // Relación técnica con Shipment
+    private final String trackingId; // ID de negocio (#SHP-2540)
     private TrackingStatus status;
     private String currentLocation;
     private TruckPositions truckPositions;
@@ -14,7 +14,7 @@ public class Tracking {
     private List<CargoDetail> cargoDetails;
     private List<Document> documents;
 
-    // Constructor completo para el Mapper (Infraestructura)
+    // constructor (1) para el Mapper de Infraestructura (Carga todos los datos)
     public Tracking(String id, String shipmentId, String trackingId, TrackingStatus status,
                     String currentLocation, TruckPositions truckPositions,
                     List<HistoryStep> history, List<CargoDetail> cargoDetails,
@@ -30,7 +30,18 @@ public class Tracking {
         this.documents = documents != null ? documents : new ArrayList<>();
     }
 
-    // Regla de Negocio: Solo actualizamos si no ha terminado
+    // constructor (2) para crear trackings nuevos y para los Test
+    public Tracking(String id, String shipmentId, String trackingId) {
+        this.id = id;
+        this.shipmentId = shipmentId;
+        this.trackingId = trackingId;
+        this.status = TrackingStatus.PENDING; // Estado inicial por defecto
+        this.history = new ArrayList<>();
+        this.cargoDetails = new ArrayList<>();
+        this.documents = new ArrayList<>();
+    }
+
+    // Regla de Negocio -> Proteger el estado
     public void updateLiveStatus(String location, TruckPositions positions) {
         if (this.status == TrackingStatus.DELIVERED) {
             throw new IllegalStateException("Shipment already delivered");
@@ -39,7 +50,6 @@ public class Tracking {
         this.truckPositions = positions;
     }
 
-    // getter
     public String getId() { return id; }
     public String getShipmentId() { return shipmentId; }
     public String getTrackingId() { return trackingId; }
