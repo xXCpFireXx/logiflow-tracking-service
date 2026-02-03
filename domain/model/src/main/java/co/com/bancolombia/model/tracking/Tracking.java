@@ -35,7 +35,7 @@ public class Tracking {
         this.id = id;
         this.shipmentId = shipmentId;
         this.trackingId = trackingId;
-        this.status = TrackingStatus.PENDING; // Estado inicial por defecto
+        this.status = TrackingStatus.CREATED; // Estado inicial por defecto
         this.history = new ArrayList<>();
         this.cargoDetails = new ArrayList<>();
         this.documents = new ArrayList<>();

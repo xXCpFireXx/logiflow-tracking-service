@@ -1,19 +1,18 @@
 package co.com.bancolombia.model.tracking.gateways;
 
 import co.com.bancolombia.model.tracking.Tracking;
+import co.com.bancolombia.model.tracking.TrackingEvent;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
 
 public interface TrackingRepository {
-    // Para buscar el historial completo de un envio
+    // Para el estado actual (Dashboard)
     Mono<Tracking> findByShipmentId(String shipmentId);
-
-    // Para guardar o actualizar el estado y posiciones
     Mono<Tracking> save(Tracking tracking);
 
-    // todos los trackings activos (para dashboard)
-    Flux<Tracking> findAll();
+    // Para la trazabilidad (Timeline/History)
+    Flux<TrackingEvent> findEventsByShipmentId(String shipmentId);
+    Mono<TrackingEvent> saveEvent(TrackingEvent event);
 
-    // Para buscar por el código que el cliente escribe en el buscador
-    Mono<Tracking> findByTrackingId(String trackingId);
+    Flux<Tracking> findAllTrackings();
 }
