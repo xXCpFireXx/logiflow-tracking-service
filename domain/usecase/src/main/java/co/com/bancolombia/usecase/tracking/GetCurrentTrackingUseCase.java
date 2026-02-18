@@ -40,8 +40,11 @@ public class GetCurrentTrackingUseCase {
                                     new Coordinate(firstEvent.getLatitude(), firstEvent.getLongitude())
                             ))
                             .history(events)
-                            .cargoDetails(shipmentInfo.getCargo() != null ?
-                                    java.util.Collections.singletonList(shipmentInfo.getCargo()) :
+                            .cargoDetails(shipmentInfo.getCargoDetails() != null ?
+                                    shipmentInfo.getCargoDetails() :
+                                    new java.util.ArrayList<>())
+                            .documents(shipmentInfo.getDocuments() != null ?
+                                    shipmentInfo.getDocuments() :
                                     new java.util.ArrayList<>())
                             .build();
                 });

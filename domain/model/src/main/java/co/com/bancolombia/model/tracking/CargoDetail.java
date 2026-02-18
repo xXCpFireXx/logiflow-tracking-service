@@ -1,14 +1,14 @@
 package co.com.bancolombia.model.tracking;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor(force = true)
 public class CargoDetail {
     private final String label;
     private final String value;
 
-    public CargoDetail(String label, String value) {
-        this.label = label;
-        this.value = value;
-    }
-
-    public String getLabel() { return label; }
-    public String getValue() { return value; }
 }

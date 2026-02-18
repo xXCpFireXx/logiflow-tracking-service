@@ -12,6 +12,6 @@ import java.util.List;
 @NoArgsConstructor
 public class Shipment {
     private String id;
-    private CargoDetail cargo;
+    private List<CargoDetail> cargoDetails;
     private List<Document> documents;
 }

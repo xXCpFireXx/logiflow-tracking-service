@@ -1,12 +1,13 @@
 package co.com.bancolombia.consumer.dto;
 
+import co.com.bancolombia.consumer.CargoInfo;
 import co.com.bancolombia.model.tracking.CargoDetail;
 import co.com.bancolombia.model.tracking.Document;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import com.fasterxml.jackson.annotation.JsonProperty; // <--- Importante
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 
@@ -21,7 +22,10 @@ public class ShipmentResponse {
     private String trackingNumber;
     private String status;
 
-    private CargoDetail cargo;
+    private String customer;
+    private String carrierName;
+
+    private CargoInfo cargo;
 
     private List<Document> documents;
 }
