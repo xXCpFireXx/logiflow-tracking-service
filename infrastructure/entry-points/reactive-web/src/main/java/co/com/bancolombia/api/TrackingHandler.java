@@ -6,6 +6,7 @@ import co.com.bancolombia.usecase.tracking.GetCurrentTrackingUseCase;
 import co.com.bancolombia.usecase.tracking.GetTrackingHistoryUseCase;
 import co.com.bancolombia.usecase.tracking.CreateTrackingUseCase;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -21,10 +22,10 @@ public class TrackingHandler {
     private final GetCurrentTrackingUseCase currentUseCase;
 
     public Mono<ServerResponse> registerEvent(ServerRequest request) {
-        return request.bodyToMono(TrackingEventRequest.class) // Recibimos el DTO
-                .map(TrackingEventRequest::toDomain)          // Lo convertimos a Dominio puro
-                .flatMap(registerUseCase::register)           // El UseCase recibe Dominio, ¡cero anotaciones!
-                .flatMap(event -> ServerResponse.ok().bodyValue(event));
+        return request.bodyToMono(TrackingEventRequest.class)
+                .map(TrackingEventRequest::toDomain)
+                .flatMap(registerUseCase::register)
+                .flatMap(event -> ServerResponse.status(HttpStatus.CREATED).build());
     }
 
     public Mono<ServerResponse> getHistory(ServerRequest request) {

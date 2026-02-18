@@ -13,8 +13,10 @@ public class TrackingMapper {
                 .status(event.getStatus().name())
                 .description(event.getDescription())
                 .occurredAt(event.getOccurredAt())
-                .latitude(event.getLocation().getX())
-                .longitude(event.getLocation().getY())
+                .latitude(event.getLatitude())
+                .longitude(event.getLongitude())
+                .city(event.getCity())
+                .countryCode(event.getCountryCode())
                 .build();
     }
 
@@ -24,7 +26,10 @@ public class TrackingMapper {
                 TrackingStatus.valueOf(doc.getStatus()),
                 doc.getDescription(),
                 doc.getOccurredAt(),
-                new Coordinate(doc.getLatitude(), doc.getLongitude())
+                doc.getLatitude(),
+                doc.getLongitude(),
+                doc.getCity(),
+                doc.getCountryCode()
         );
     }
 }

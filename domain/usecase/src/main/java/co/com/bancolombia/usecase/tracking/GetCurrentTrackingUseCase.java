@@ -1,14 +1,12 @@
 package co.com.bancolombia.usecase.tracking;
 
-// Llamar al microservicio de Shipment (usando el Gateway) para traer los detalles de carga y documentos y Unimos all en el objeto Tracking
+import co.com.bancolombia.model.tracking.Coordinate;
 import co.com.bancolombia.model.tracking.Tracking;
-import co.com.bancolombia.model.tracking.TrackingEvent;
+import co.com.bancolombia.model.tracking.TruckPositions;
 import co.com.bancolombia.model.tracking.gateways.ShipmentGateway;
 import co.com.bancolombia.model.tracking.gateways.TrackingRepository;
-import co.com.bancolombia.model.tracking.TruckPositions;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
 
 @RequiredArgsConstructor
 public class GetCurrentTrackingUseCase {
@@ -16,31 +14,36 @@ public class GetCurrentTrackingUseCase {
     private final ShipmentGateway shipmentGateway;
 
     public Mono<Tracking> current(String shipmentId) {
-        // Combinamos la búsqueda en Mongo con la llamada al otro Microservicio
-        return Mono.zip(
-                repository.findEventsByShipmentId(shipmentId).collectList(), // Eventos de este micro
-                shipmentGateway.getCargoDetails(shipmentId),                // Datos de Shipment Service
-                shipmentGateway.getShipmentDocuments(shipmentId)            // Documentos de Shipment Service
-        ).map(tuple -> {
-            var events = tuple.getT1();
-            var cargo = tuple.getT2();
-            var docs = tuple.getT3();
+        return repository.findEventsByShipmentId(shipmentId)
+                .collectList()
+                .zipWith(shipmentGateway.getDetails(shipmentId))
+                .map(tuple -> {
+                    var events = tuple.getT1();       // List<TrackingEvent>
+                    var shipmentInfo = tuple.getT2();
 
-            // Usamos el último evento para saber la posición actual y el estado
-            TrackingEvent lastEvent = events.get(events.size() - 1);
+                    if (events.isEmpty()) {
+                        return Tracking.builder().shipmentId(shipmentId).build();
+                    }
 
-            // Creamos el objeto Tracking completo para el Frontend
-            return new Tracking(
-                    "ID-TEMP", // ID técnico
-                    shipmentId,
-                    "TRK-" + shipmentId,
-                    lastEvent.getStatus(),
-                    lastEvent.getDescription(),
-                    new TruckPositions(lastEvent.getLocation(), null), // Posición actual
-                    new java.util.ArrayList<>(), // Aquí se podriamapear los HistorySteps
-                    cargo,
-                    docs
-            );
-        });
+                    // Lógica de carritos (Azul y Naranja)
+                    var firstEvent = events.get(0);
+                    var lastEvent = events.get(events.size() - 1);
+
+                    return Tracking.builder()
+                            .id(lastEvent.getShipmentId())
+                            .shipmentId(shipmentId)
+                            .trackingId("TRK-" + shipmentId)
+                            .status(lastEvent.getStatus())
+                            .currentLocation(lastEvent.getCity() + ", " + lastEvent.getCountryCode())
+                            .truckPositions(new TruckPositions(
+                                    new Coordinate(lastEvent.getLatitude(), lastEvent.getLongitude()),
+                                    new Coordinate(firstEvent.getLatitude(), firstEvent.getLongitude())
+                            ))
+                            .history(events)
+                            .cargoDetails(shipmentInfo.getCargo() != null ?
+                                    java.util.Collections.singletonList(shipmentInfo.getCargo()) :
+                                    new java.util.ArrayList<>())
+                            .build();
+                });
     }
 }

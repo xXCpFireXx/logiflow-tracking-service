@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonProperty; // <--- Importante
 
 import java.util.List;
 
@@ -14,9 +15,13 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ShipmentResponse {
+    @JsonProperty("_id")
     private String id;
-    private String trackingId;
+
+    private String trackingNumber;
     private String status;
-    private List<CargoDetail> details;  // Esto mapea los "Cargo Details"
-    private List<Document> documents;    // Esto mapea los "Documents"
+
+    private CargoDetail cargo;
+
+    private List<Document> documents;
 }

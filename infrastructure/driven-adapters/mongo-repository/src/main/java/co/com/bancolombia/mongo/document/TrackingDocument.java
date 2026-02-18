@@ -13,16 +13,16 @@ import java.time.Instant;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Document(collection = "tracking")
+@Document(collection = "tracking_events")
 public class TrackingDocument {
     @Id
     private String id;
     private String shipmentId;
     private String status;
     private String description;
-    private Instant occurredAt;
-
-    // Aplanamos la coordenada para que Mongo la guarde fácil
+    private java.time.Instant occurredAt;
     private double latitude;
     private double longitude;
+    private String city;
+    private String countryCode;
 }

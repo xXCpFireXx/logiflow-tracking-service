@@ -1,31 +1,31 @@
 package co.com.bancolombia.api.dto;
 
-import co.com.bancolombia.model.tracking.Coordinate;
 import co.com.bancolombia.model.tracking.TrackingEvent;
 import co.com.bancolombia.model.tracking.TrackingStatus;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
-
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class TrackingEventRequest {
     private String shipmentId;
     private String status;
     private String description;
-    private Instant occurredAt;
-    private CoordinateRequest location;
+    private double latitude;
+    private double longitude;
+    private String city;
+    private String countryCode;
 
     public TrackingEvent toDomain() {
         return new TrackingEvent(
                 this.shipmentId,
                 TrackingStatus.valueOf(this.status),
                 this.description,
-                this.occurredAt,
-                new Coordinate(this.location.getX(), this.location.getY())
+                null, // El dominio se encarga del tiempo
+                this.latitude,
+                this.longitude,
+                this.city,
+                this.countryCode
         );
     }
 }
