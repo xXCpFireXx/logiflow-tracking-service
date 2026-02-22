@@ -53,24 +53,27 @@ public class RestConsumer implements ShipmentGateway {
     @Override
     public Mono<Shipment> getDetails(String shipmentId) {
         return client.get()
-                .uri("/api/shipments/" + shipmentId)
+                .uri("/shipments/" + shipmentId)
                 .retrieve()
                 .bodyToMono(ShipmentResponse.class)
                 .map(response -> {
                     List<CargoDetail> detailsList = new ArrayList<>();
 
-                    if (response.getCustomer() != null)
-                        detailsList.add(new CargoDetail("Cliente", response.getCustomer()));
-
-                    if (response.getCarrierName() != null)
-                        detailsList.add(new CargoDetail("Transportadora", response.getCarrierName()));
-
                     if (response.getCargo() != null) {
                         CargoInfo info = response.getCargo();
+
                         if (info.getCommodity() != null)
                             detailsList.add(new CargoDetail("Mercancía", info.getCommodity()));
+
                         if (info.getPackageType() != null)
-                            detailsList.add(new CargoDetail("Empaque", info.getPackageType()));
+                            detailsList.add(new CargoDetail("Tipo de empaque", info.getPackageType()));
+
+                        if (info.getQuantity() != null)
+                            detailsList.add(new CargoDetail("Cantidad", info.getQuantity()));
+
+                        if (info.getDimensions() != null)
+                            detailsList.add(new CargoDetail("Dimensiones", info.getDimensions()));
+
                         if (info.getWeight() > 0)
                             detailsList.add(new CargoDetail("Peso", info.getWeight() + " kg"));
                     }

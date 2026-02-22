@@ -25,6 +25,7 @@ public class ShipmentResponse {
     private String customer;
     private String carrierName;
 
+    @JsonProperty("cargoDetails")
     private CargoInfo cargo;
 
     private List<Document> documents;
