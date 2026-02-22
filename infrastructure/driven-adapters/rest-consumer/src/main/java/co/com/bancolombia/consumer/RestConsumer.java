@@ -2,6 +2,7 @@ package co.com.bancolombia.consumer;
 
 import co.com.bancolombia.consumer.dto.ShipmentResponse;
 import co.com.bancolombia.model.tracking.CargoDetail;
+import co.com.bancolombia.model.tracking.Document;
 import co.com.bancolombia.model.tracking.Shipment;
 import co.com.bancolombia.model.tracking.gateways.ShipmentGateway;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -17,7 +18,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RestConsumer implements ShipmentGateway {
     private final WebClient client;
-
 
     // These methods are an example that illustrates the implementation of WebClient.
     // You should use the methods that you implement from the Gateway from the domain.
@@ -81,7 +81,11 @@ public class RestConsumer implements ShipmentGateway {
                     return Shipment.builder()
                             .id(response.getId())
                             .cargoDetails(detailsList)
-                            .documents(response.getDocuments() != null ? response.getDocuments() : new ArrayList<>())
+                            .documents(response.getDocuments() != null ?
+                                    response.getDocuments().stream()
+                                            .map(doc -> new Document(doc.getName(), doc.getFormat(), doc.getSize()))
+                                            .toList()
+                                    : new ArrayList<>())
                             .build();
                 })
                 .onErrorResume(e -> {
