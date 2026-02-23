@@ -1,8 +1,8 @@
 package co.com.bancolombia.mongo;
 
-import co.com.bancolombia.model.tracking.Tracking;
-import co.com.bancolombia.model.tracking.TrackingEvent;
+import co.com.bancolombia.model.tracking.*;
 import co.com.bancolombia.model.tracking.gateways.TrackingRepository;
+import co.com.bancolombia.mongo.document.LiveTrackingDocument;
 import co.com.bancolombia.mongo.helper.AdapterOperations;
 import co.com.bancolombia.mongo.document.TrackingDocument;
 import co.com.bancolombia.mongo.mapper.TrackingMapper;
@@ -15,8 +15,11 @@ import reactor.core.publisher.Mono;
 public class MongoRepositoryAdapter extends AdapterOperations<TrackingEvent, TrackingDocument, String, MongoDBRepository>
         implements TrackingRepository {
 
-    public MongoRepositoryAdapter(MongoDBRepository repository, ObjectMapper mapper) {
+    private final LiveMongoDBRepository liveRepository;
+
+    public MongoRepositoryAdapter(MongoDBRepository repository, ObjectMapper mapper, LiveMongoDBRepository liveRepository) {
         super(repository, mapper, d -> TrackingMapper.toEntity((TrackingDocument) d));
+        this.liveRepository = liveRepository;
     }
 
     @Override
@@ -33,18 +36,57 @@ public class MongoRepositoryAdapter extends AdapterOperations<TrackingEvent, Tra
 
     @Override
     public Flux<Tracking> findAllTrackings() {
-        // Por ahora lo dejamos en vacío hasta que definamos
-        return Flux.empty();
+        return liveRepository.findAll()
+                .map(doc -> {
+                    var blue = new Coordinate(doc.getBlueLatitude(), doc.getBlueLongitude());
+                    var orange = new Coordinate(doc.getOrangeLatitude(), doc.getOrangeLongitude());
+
+                    return Tracking.builder()
+                            .shipmentId(doc.getShipmentId())
+                            .status(TrackingStatus.valueOf(doc.getStatus()))
+                            .truckPositions(new TruckPositions(blue, orange))
+                            .build();
+                });
     }
 
     @Override
     public Mono<Tracking> findByShipmentId(String shipmentId) {
-        return Mono.empty();
+        return liveRepository.findById(shipmentId)
+                .map(doc -> {
+                    // EXPLICACIÓN: Validamos que no sean nulos antes de crear la Coordenada
+                    double bLat = doc.getBlueLatitude() != null ? doc.getBlueLatitude() : 0.0;
+                    double bLon = doc.getBlueLongitude() != null ? doc.getBlueLongitude() : 0.0;
+                    double oLat = doc.getOrangeLatitude() != null ? doc.getOrangeLatitude() : 0.0;
+                    double oLon = doc.getOrangeLongitude() != null ? doc.getOrangeLongitude() : 0.0;
+
+                    Coordinate blue = new Coordinate(bLat, bLon);
+                    Coordinate orange = new Coordinate(oLat, oLon);
+
+                    return Tracking.builder()
+                            .id(doc.getShipmentId())
+                            .shipmentId(doc.getShipmentId())
+                            .status(doc.getStatus() != null ? TrackingStatus.valueOf(doc.getStatus()) : null)
+                            .truckPositions(new TruckPositions(blue, orange))
+                            .build();
+                });
     }
 
     @Override
     public Mono<Tracking> save(Tracking tracking) {
-        return Mono.empty();
+        var pos = tracking.getTruckPositions();
+
+        LiveTrackingDocument liveDoc = LiveTrackingDocument.builder()
+                .shipmentId(tracking.getShipmentId())
+                .status(tracking.getStatus() != null ? tracking.getStatus().name() : null)
+
+                .blueLatitude(pos.getBlue().getLatitude())
+                .blueLongitude(pos.getBlue().getLongitude())
+                .orangeLatitude(pos.getOrange().getLatitude())
+                .orangeLongitude(pos.getOrange().getLongitude())
+                .build();
+
+        return liveRepository.save(liveDoc)
+                .thenReturn(tracking);
     }
 
 }

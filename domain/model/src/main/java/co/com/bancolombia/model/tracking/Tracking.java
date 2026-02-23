@@ -35,12 +35,22 @@ public class Tracking {
         this.documents = new ArrayList<>();
     }
 
-    // Regla de Negocio -> Proteger el estado
-    public void updateLiveStatus(String location, TruckPositions positions) {
+    public Tracking updateLiveStatus(Coordinate newBluePosition, TrackingStatus newStatus, String city) {
         if (this.status == TrackingStatus.DELIVERED) {
             throw new IllegalStateException("Shipment already delivered");
         }
-        this.currentLocation = location;
-        this.truckPositions = positions;
+
+        this.status = newStatus;
+        this.currentLocation = city;
+
+        // Aquí está el secreto:
+        // Creamos nuevas posiciones con el AZUL nuevo,
+        // pero mantenemos el NARANJA que ya estaba en el objeto.
+        this.truckPositions = new TruckPositions(
+                newBluePosition,
+                this.truckPositions.getOrange()
+        );
+
+        return this;
     }
 }
