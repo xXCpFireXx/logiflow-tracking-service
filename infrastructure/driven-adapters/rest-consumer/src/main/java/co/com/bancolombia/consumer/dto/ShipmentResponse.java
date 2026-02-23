@@ -21,9 +21,6 @@ public class ShipmentResponse {
     private String trackingNumber;
     private String status;
 
-    private String customer;
-    private String carrierName;
-
     @JsonProperty("cargoDetails")
     private CargoInfo cargo;
 

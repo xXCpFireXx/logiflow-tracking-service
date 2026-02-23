@@ -1,14 +1,14 @@
 package co.com.bancolombia.model.tracking;
 
 public class Coordinate {
-    private final double x;
-    private final double y;
+    private final double latitude;
+    private final double longitude;
 
-    public Coordinate(double x, double y) {
-        this.x = x;
-        this.y = y;
+    public Coordinate(double latitude, double longitude) {
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
-    public double getX() { return x; }
-    public double getY() { return y; }
+    public double getLatitude() { return latitude; }
+    public double getLongitude() { return longitude; }
 }

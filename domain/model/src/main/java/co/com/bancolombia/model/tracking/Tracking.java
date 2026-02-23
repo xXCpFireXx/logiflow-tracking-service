@@ -19,7 +19,7 @@ public class Tracking {
     private TrackingStatus status;
     private String currentLocation;
     private TruckPositions truckPositions;
-    private final List<TrackingEvent> history;
+    private final List<HistoryStep> history;
     private List<CargoDetail> cargoDetails;
     private List<Document> documents;
 
