@@ -12,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 public class Shipment {
     private String id;
+    private String trackingNumber;
     private List<CargoDetail> cargoDetails;
     private List<Document> documents;
 }

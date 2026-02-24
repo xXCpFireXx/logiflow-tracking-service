@@ -53,7 +53,6 @@ public class MongoRepositoryAdapter extends AdapterOperations<TrackingEvent, Tra
     public Mono<Tracking> findByShipmentId(String shipmentId) {
         return liveRepository.findById(shipmentId)
                 .map(doc -> {
-                    // EXPLICACIÓN: Validamos que no sean nulos antes de crear la Coordenada
                     double bLat = doc.getBlueLatitude() != null ? doc.getBlueLatitude() : 0.0;
                     double bLon = doc.getBlueLongitude() != null ? doc.getBlueLongitude() : 0.0;
                     double oLat = doc.getOrangeLatitude() != null ? doc.getOrangeLatitude() : 0.0;
@@ -63,10 +62,13 @@ public class MongoRepositoryAdapter extends AdapterOperations<TrackingEvent, Tra
                     Coordinate orange = new Coordinate(oLat, oLon);
 
                     return Tracking.builder()
-                            .id(doc.getShipmentId())
                             .shipmentId(doc.getShipmentId())
+                            .trackingId(doc.getTrackingId())
                             .status(doc.getStatus() != null ? TrackingStatus.valueOf(doc.getStatus()) : null)
                             .truckPositions(new TruckPositions(blue, orange))
+                            .history(new java.util.ArrayList<>())
+                            .cargoDetails(new java.util.ArrayList<>())
+                            .documents(new java.util.ArrayList<>())
                             .build();
                 });
     }
@@ -77,6 +79,7 @@ public class MongoRepositoryAdapter extends AdapterOperations<TrackingEvent, Tra
 
         LiveTrackingDocument liveDoc = LiveTrackingDocument.builder()
                 .shipmentId(tracking.getShipmentId())
+                .trackingId(tracking.getTrackingId())
                 .status(tracking.getStatus() != null ? tracking.getStatus().name() : null)
 
                 .blueLatitude(pos.getBlue().getLatitude())

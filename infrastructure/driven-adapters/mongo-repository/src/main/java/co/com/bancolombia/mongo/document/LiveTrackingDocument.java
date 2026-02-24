@@ -15,6 +15,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class LiveTrackingDocument {
     @Id
     private String shipmentId;
+    private String trackingId;
     private String status;
 
     private Double blueLatitude;

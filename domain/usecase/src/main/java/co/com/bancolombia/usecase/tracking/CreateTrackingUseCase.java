@@ -4,6 +4,8 @@ import co.com.bancolombia.model.tracking.Coordinate;
 import co.com.bancolombia.model.tracking.Tracking;
 import co.com.bancolombia.model.tracking.TrackingEvent;
 import co.com.bancolombia.model.tracking.TruckPositions;
+import co.com.bancolombia.model.tracking.gateways.ShipmentGateway;
+import co.com.bancolombia.model.tracking.gateways.TrackingEventTruck;
 import co.com.bancolombia.model.tracking.gateways.TrackingRepository;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
@@ -11,38 +13,46 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class CreateTrackingUseCase {
     private final TrackingRepository repository;
+    private final TrackingEventTruck eventTruck;
+    private final ShipmentGateway shipmentGateway;
 
     public Mono<TrackingEvent> register(TrackingEvent event) {
-        return repository.saveEvent(event) // 1. Guarda siempre el historial
+        return repository.saveEvent(event)
                 .flatMap(savedEvent ->
-                        repository.findByShipmentId(event.getShipmentId()) // 2. Busca el estado vivo
-                                .switchIfEmpty(Mono.defer(() -> createInitialTracking(event))) // 3. ¡LA CLAVE! Si no existe, lo crea
-                                .flatMap(currentTracking -> {
-                                    // 4. Actualiza el azul (movimiento) y mantiene el naranja
-                                    currentTracking.updateLiveStatus(
+                        repository.findByShipmentId(event.getShipmentId())
+                                .switchIfEmpty(Mono.defer(() -> createInitialTracking(event))) // Ahora es reactivo
+                                .flatMap(current -> {
+                                    current.updateLiveStatus(
                                             new Coordinate(event.getLatitude(), event.getLongitude()),
                                             event.getStatus(),
                                             event.getCity()
                                     );
-                                    return repository.save(currentTracking);
+                                    return repository.save(current)
+                                            .doOnNext(eventTruck::emit); // se emite el sse
                                 })
                                 .thenReturn(savedEvent)
                 );
     }
 
-    // Método auxiliar para crear el primer registro de tracking vivo
+    // Metodo auxiliar para crear el primer registro de tracking vivo
     private Mono<Tracking> createInitialTracking(TrackingEvent event) {
-        Coordinate initialPos = new Coordinate(event.getLatitude(), event.getLongitude());
-        return Mono.just(Tracking.builder()
-                .shipmentId(event.getShipmentId())
-                .trackingId("TRK-" + event.getShipmentId().substring(0, 8).toUpperCase())
-                .status(event.getStatus())
-                .currentLocation(event.getCity())
-                // Al principio, el camión azul y el punto naranja están en el mismo sitio
-                .truckPositions(new TruckPositions(initialPos, initialPos))
-                .history(new java.util.ArrayList<>())
-                .cargoDetails(new java.util.ArrayList<>())
-                .documents(new java.util.ArrayList<>())
-                .build());
+        // 1. Cambiamos el nombre del método a getDetails
+        return shipmentGateway.getDetails(event.getShipmentId())
+                .map(shipment -> {
+                    Coordinate initialPos = new Coordinate(event.getLatitude(), event.getLongitude());
+                    return Tracking.builder()
+                            // El ID técnico lo dejamos nulo para que no se repita con shipmentId en el JSON
+                            .id(null)
+                            .shipmentId(event.getShipmentId())
+                            // 2. Usamos el campo correcto que viene del microservicio de Shipment
+                            .trackingId(shipment.getTrackingNumber())
+                            .status(event.getStatus())
+                            .currentLocation(event.getCity())
+                            .truckPositions(new TruckPositions(initialPos, initialPos))
+                            .history(new java.util.ArrayList<>())
+                            .cargoDetails(new java.util.ArrayList<>())
+                            .documents(new java.util.ArrayList<>())
+                            .build();
+                });
     }
 }

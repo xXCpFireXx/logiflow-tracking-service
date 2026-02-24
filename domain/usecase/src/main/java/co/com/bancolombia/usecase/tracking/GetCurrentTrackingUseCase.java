@@ -28,7 +28,10 @@ public class GetCurrentTrackingUseCase {
             var shipmentInfo = tuple.getT2();
 
             if (events.isEmpty()) {
-                return Mono.just(Tracking.builder().shipmentId(shipmentId).build());
+                return Mono.just(Tracking.builder()
+                        .shipmentId(shipmentId)
+                        .trackingId(shipmentInfo.getTrackingNumber())
+                        .build());
             }
 
             var firstEvent = events.get(0);
@@ -55,15 +58,15 @@ public class GetCurrentTrackingUseCase {
 
             return repository.findByShipmentId(shipmentId)
                     .defaultIfEmpty(Tracking.builder()
-                            .id(lastEvent.getShipmentId())
                             .shipmentId(shipmentId)
                             .truckPositions(new TruckPositions(
                                     new Coordinate(lastEvent.getLatitude(), lastEvent.getLongitude()),
                                     new Coordinate(firstEvent.getLatitude(), firstEvent.getLongitude())
                             ))
                             .build())
-                    .map(live -> live.toBuilder() // <--- Usamos el objeto "vivo" como base
-                            .trackingId("TRK-" + shipmentId)
+                    .map(live -> live.toBuilder()
+                            .shipmentId(shipmentId)
+                            .trackingId(shipmentInfo.getTrackingNumber())
                             .status(lastEvent.getStatus())
                             .currentLocation(lastEvent.getCity() + ", " + lastEvent.getCountryCode())
                             .history(historySteps)

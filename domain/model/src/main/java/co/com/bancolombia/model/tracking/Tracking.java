@@ -43,7 +43,6 @@ public class Tracking {
         this.status = newStatus;
         this.currentLocation = city;
 
-        // Aquí está el secreto:
         // Creamos nuevas posiciones con el AZUL nuevo,
         // pero mantenemos el NARANJA que ya estaba en el objeto.
         this.truckPositions = new TruckPositions(

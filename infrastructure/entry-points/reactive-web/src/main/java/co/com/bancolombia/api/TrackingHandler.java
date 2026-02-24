@@ -1,7 +1,9 @@
 package co.com.bancolombia.api;
 
 import co.com.bancolombia.api.dto.TrackingEventRequest;
+import co.com.bancolombia.model.tracking.Tracking;
 import co.com.bancolombia.model.tracking.TrackingEvent;
+import co.com.bancolombia.model.tracking.gateways.TrackingEventTruck;
 import co.com.bancolombia.usecase.tracking.GetCurrentTrackingUseCase;
 import co.com.bancolombia.usecase.tracking.GetTrackingHistoryUseCase;
 import co.com.bancolombia.usecase.tracking.CreateTrackingUseCase;
@@ -20,6 +22,8 @@ public class TrackingHandler {
     private final CreateTrackingUseCase registerUseCase;
     private final GetTrackingHistoryUseCase historyUseCase;
     private final GetCurrentTrackingUseCase currentUseCase;
+
+    private final TrackingEventTruck eventTruck;
 
     public Mono<ServerResponse> registerEvent(ServerRequest request) {
         return request.bodyToMono(TrackingEventRequest.class)
@@ -45,7 +49,7 @@ public class TrackingHandler {
         String shipmentId = request.pathVariable("shipmentId");
 
         return ServerResponse.ok()
-                .contentType(MediaType.TEXT_EVENT_STREAM) // Esto le dice al navegador: "Mantén la conexión abierta"
-                .body(historyUseCase.history(shipmentId), TrackingEvent.class);
+                .contentType(MediaType.TEXT_EVENT_STREAM) // <--- Clave: Establece la conexión SSE
+                .body(eventTruck.getEvents(shipmentId), Tracking.class); // <--- Escucha el camion de eventos
     }
 }

@@ -80,6 +80,7 @@ public class RestConsumer implements ShipmentGateway {
 
                     return Shipment.builder()
                             .id(response.getId())
+                            .trackingNumber(response.getTrackingNumber())
                             .cargoDetails(detailsList)
                             .documents(response.getDocuments() != null ?
                                     response.getDocuments().stream()
