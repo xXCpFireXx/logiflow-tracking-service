@@ -27,52 +27,19 @@ public class GetCurrentTrackingUseCase {
             var events = tuple.getT1();
             var shipmentInfo = tuple.getT2();
 
-            if (events.isEmpty()) {
-                return Mono.just(Tracking.builder()
-                        .shipmentId(shipmentId)
-                        .trackingId(shipmentInfo.getTrackingNumber())
-                        .build());
-            }
+            if (events.isEmpty()) return Mono.empty();
 
-            var firstEvent = events.get(0);
             var lastEvent = events.get(events.size() - 1);
 
-            // Formateo de historia (Tu lógica está perfecta)
-            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy", new Locale("es", "CO"));
-            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
-            ZoneId bogotaZone = ZoneId.of("America/Bogota");
-
-            var historySteps = events.stream()
-                    .map(event -> {
-                        var dateTime = event.getOccurredAt().atZone(bogotaZone);
-                        return new HistoryStep(
-                                dateTime.format(dateFormatter),
-                                dateTime.format(timeFormatter),
-                                event.getStatus().toString(),
-                                event.getCity() + ", " + event.getCountryCode(),
-                                event.getDescription(),
-                                event == lastEvent,
-                                true
-                        );
-                    }).toList();
-
             return repository.findByShipmentId(shipmentId)
-                    .defaultIfEmpty(Tracking.builder()
-                            .shipmentId(shipmentId)
-                            .truckPositions(new TruckPositions(
-                                    new Coordinate(lastEvent.getLatitude(), lastEvent.getLongitude()),
-                                    new Coordinate(firstEvent.getLatitude(), firstEvent.getLongitude())
-                            ))
-                            .build())
                     .map(live -> live.toBuilder()
-                            .shipmentId(shipmentId)
-                            .trackingId(shipmentInfo.getTrackingNumber())
+                            .trackingId(shipmentInfo.getTrackingNumber()) // #SHP-C8F3 real
                             .status(lastEvent.getStatus())
                             .currentLocation(lastEvent.getCity() + ", " + lastEvent.getCountryCode())
-                            .history(historySteps)
-                            .cargoDetails(shipmentInfo.getCargoDetails() != null ? shipmentInfo.getCargoDetails() : new ArrayList<>())
-                            .documents(shipmentInfo.getDocuments() != null ? shipmentInfo.getDocuments() : new ArrayList<>())
+                            .cargoDetails(shipmentInfo.getCargoDetails())
+                            .documents(shipmentInfo.getDocuments())
                             .build());
         });
     }
+
 }

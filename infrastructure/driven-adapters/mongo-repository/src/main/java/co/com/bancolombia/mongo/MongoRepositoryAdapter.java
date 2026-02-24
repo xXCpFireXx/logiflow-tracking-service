@@ -66,7 +66,6 @@ public class MongoRepositoryAdapter extends AdapterOperations<TrackingEvent, Tra
                             .trackingId(doc.getTrackingId())
                             .status(doc.getStatus() != null ? TrackingStatus.valueOf(doc.getStatus()) : null)
                             .truckPositions(new TruckPositions(blue, orange))
-                            .history(new java.util.ArrayList<>())
                             .cargoDetails(new java.util.ArrayList<>())
                             .documents(new java.util.ArrayList<>())
                             .build();

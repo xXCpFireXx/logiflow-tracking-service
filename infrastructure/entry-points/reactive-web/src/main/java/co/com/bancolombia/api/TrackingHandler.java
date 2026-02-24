@@ -1,6 +1,7 @@
 package co.com.bancolombia.api;
 
 import co.com.bancolombia.api.dto.TrackingEventRequest;
+import co.com.bancolombia.model.tracking.HistoryStep;
 import co.com.bancolombia.model.tracking.Tracking;
 import co.com.bancolombia.model.tracking.TrackingEvent;
 import co.com.bancolombia.model.tracking.gateways.TrackingEventTruck;
@@ -36,7 +37,7 @@ public class TrackingHandler {
         String shipmentId = request.pathVariable("shipmentId");
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(historyUseCase.history(shipmentId), TrackingEvent.class);
+                .body(historyUseCase.history(shipmentId), HistoryStep.class); // Ahora devuelve HistoryStep
     }
 
     public Mono<ServerResponse> getCurrentStatus(ServerRequest request) {

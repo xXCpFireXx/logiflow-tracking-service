@@ -42,14 +42,12 @@ public class CreateTrackingUseCase {
                     Coordinate initialPos = new Coordinate(event.getLatitude(), event.getLongitude());
                     return Tracking.builder()
                             // El ID técnico lo dejamos nulo para que no se repita con shipmentId en el JSON
-                            .id(null)
                             .shipmentId(event.getShipmentId())
                             // 2. Usamos el campo correcto que viene del microservicio de Shipment
                             .trackingId(shipment.getTrackingNumber())
                             .status(event.getStatus())
                             .currentLocation(event.getCity())
                             .truckPositions(new TruckPositions(initialPos, initialPos))
-                            .history(new java.util.ArrayList<>())
                             .cargoDetails(new java.util.ArrayList<>())
                             .documents(new java.util.ArrayList<>())
                             .build();
