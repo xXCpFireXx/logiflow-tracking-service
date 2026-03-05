@@ -11,10 +11,12 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 
 @Configuration
 public class RouterRest {
+
     @Bean
-    public RouterFunction<ServerResponse> routerFunction(Handler handler) {
-        return route(GET("/api/usecase/path"), handler::listenGETUseCase)
-                .andRoute(POST("/api/usecase/otherpath"), handler::listenPOSTUseCase)
-                .and(route(GET("/api/otherusercase/path"), handler::listenGETOtherUseCase));
+    public RouterFunction<ServerResponse> routerFunction(TrackingHandler handler) {
+        return route(POST("/tracking/events"), handler::registerEvent)
+                .andRoute(GET("/tracking/shipments/{shipmentId}/history"), handler::getHistory)
+                .andRoute(GET("/tracking/shipments/{shipmentId}/current"), handler::getCurrentStatus)
+                .andRoute(GET("/tracking/stream/{shipmentId}"), handler::streamTracking);
     }
 }
