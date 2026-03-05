@@ -18,7 +18,7 @@ public class Tracking {
     private TrackingStatus status;
     private String currentLocation;
     private TruckPositions truckPositions;
-    private List<CargoDetail> cargoDetails;
+    private Object cargo;
     private List<Document> documents;
 
 
@@ -27,7 +27,7 @@ public class Tracking {
         this.shipmentId = shipmentId;
         this.trackingId = trackingId;
         this.status = TrackingStatus.CREATED; // Estado inicial por defecto
-        this.cargoDetails = new ArrayList<>();
+        this.cargo = new ArrayList<>();
         this.documents = new ArrayList<>();
     }
 

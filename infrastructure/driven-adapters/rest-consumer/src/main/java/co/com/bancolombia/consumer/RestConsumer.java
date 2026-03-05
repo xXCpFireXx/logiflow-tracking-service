@@ -1,7 +1,6 @@
 package co.com.bancolombia.consumer;
 
 import co.com.bancolombia.consumer.dto.ShipmentResponse;
-import co.com.bancolombia.model.tracking.CargoDetail;
 import co.com.bancolombia.model.tracking.Document;
 import co.com.bancolombia.model.tracking.Shipment;
 import co.com.bancolombia.model.tracking.gateways.ShipmentGateway;
@@ -12,7 +11,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -28,14 +26,6 @@ public class RestConsumer implements ShipmentGateway {
                 .retrieve()
                 .bodyToMono(ObjectResponse.class);
     }
-
-// Possible fallback method
-//    public Mono<String> testGetOk(Exception ignored) {
-//        return client
-//                .get() // TODO: change for another endpoint or destination
-//                .retrieve()
-//                .bodyToMono(String.class);
-//    }
 
     @CircuitBreaker(name = "testPost") // This name should match with settings name in application.yaml
     public Mono<ObjectResponse> testPost() {
@@ -56,45 +46,20 @@ public class RestConsumer implements ShipmentGateway {
                 .uri("/shipments/" + shipmentId)
                 .retrieve()
                 .bodyToMono(ShipmentResponse.class)
-                .map(response -> {
-                    List<CargoDetail> detailsList = new ArrayList<>();
-
-                    if (response.getCargo() != null) {
-                        CargoInfo info = response.getCargo();
-
-                        if (info.getCommodity() != null)
-                            detailsList.add(new CargoDetail("Mercancía", info.getCommodity()));
-
-                        if (info.getPackageType() != null)
-                            detailsList.add(new CargoDetail("Tipo de empaque", info.getPackageType()));
-
-                        if (info.getQuantity() != null)
-                            detailsList.add(new CargoDetail("Cantidad", info.getQuantity()));
-
-                        if (info.getDimensions() != null)
-                            detailsList.add(new CargoDetail("Dimensiones", info.getDimensions()));
-
-                        if (info.getWeight() > 0)
-                            detailsList.add(new CargoDetail("Peso", info.getWeight() + " kg"));
-                    }
-
-                    return Shipment.builder()
-                            .id(response.getId())
-                            .trackingNumber(response.getTrackingNumber())
-                            .cargoDetails(detailsList)
-                            .documents(response.getDocuments() != null ?
-                                    response.getDocuments().stream()
-                                            .map(doc -> new Document(doc.getName(), doc.getFormat(), doc.getSize()))
-                                            .toList()
-                                    : new ArrayList<>())
-                            .build();
-                })
+                .map(response -> Shipment.builder()
+                        .id(response.getId())
+                        .trackingNumber(response.getTrackingNumber())
+                        .status(response.getStatus())
+                        .cargo(response.getCargo())
+                        .documents(response.getDocuments() != null ?
+                                response.getDocuments().stream()
+                                        .map(doc -> new Document(doc.getName(), doc.getFormat(), doc.getSize()))
+                                        .toList()
+                                : new ArrayList<>())
+                        .build())
                 .onErrorResume(e -> {
                     System.out.println("Error conectando a Shipment: " + e.getMessage());
-                    return Mono.just(Shipment.builder()
-                            .id(shipmentId)
-                            .cargoDetails(new ArrayList<CargoDetail>())
-                            .build());
+                    return Mono.just(Shipment.builder().id(shipmentId).build());
                 });
     }
 }

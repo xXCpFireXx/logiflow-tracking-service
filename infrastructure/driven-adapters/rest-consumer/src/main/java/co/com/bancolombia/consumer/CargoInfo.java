@@ -9,7 +9,7 @@ public class CargoInfo {
     private String dimensions;
     private String volume;
     private String commodity;
-    private boolean stackable;
+    private Boolean stackable;
     private String hsCode;
-    private double weight;
+    private Double weight;
 }

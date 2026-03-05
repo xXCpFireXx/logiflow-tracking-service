@@ -17,6 +17,8 @@ public class LiveTrackingDocument {
     private String shipmentId;
     private String trackingId;
     private String status;
+    private String currentLocation;
+    private Object cargo;
 
     private Double blueLatitude;
     private Double blueLongitude;

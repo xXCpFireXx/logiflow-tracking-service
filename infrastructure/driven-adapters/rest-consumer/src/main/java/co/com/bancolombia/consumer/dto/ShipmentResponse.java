@@ -1,7 +1,6 @@
 package co.com.bancolombia.consumer.dto;
 
 import co.com.bancolombia.consumer.CargoInfo;
-import co.com.bancolombia.model.tracking.CargoDetail;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,7 +20,7 @@ public class ShipmentResponse {
     private String trackingNumber;
     private String status;
 
-    @JsonProperty("cargoDetails")
+    @JsonProperty("cargo") // cargo info
     private CargoInfo cargo;
 
     private List<DocumentResponse> documents;

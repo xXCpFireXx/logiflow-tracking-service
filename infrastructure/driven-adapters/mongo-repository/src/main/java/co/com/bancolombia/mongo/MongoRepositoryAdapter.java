@@ -66,7 +66,7 @@ public class MongoRepositoryAdapter extends AdapterOperations<TrackingEvent, Tra
                             .trackingId(doc.getTrackingId())
                             .status(doc.getStatus() != null ? TrackingStatus.valueOf(doc.getStatus()) : null)
                             .truckPositions(new TruckPositions(blue, orange))
-                            .cargoDetails(new java.util.ArrayList<>())
+                            .cargo(doc.getCargo())
                             .documents(new java.util.ArrayList<>())
                             .build();
                 });
@@ -80,7 +80,7 @@ public class MongoRepositoryAdapter extends AdapterOperations<TrackingEvent, Tra
                 .shipmentId(tracking.getShipmentId())
                 .trackingId(tracking.getTrackingId())
                 .status(tracking.getStatus() != null ? tracking.getStatus().name() : null)
-
+                .cargo(tracking.getCargo())
                 .blueLatitude(pos.getBlue().getLatitude())
                 .blueLongitude(pos.getBlue().getLongitude())
                 .orangeLatitude(pos.getOrange().getLatitude())

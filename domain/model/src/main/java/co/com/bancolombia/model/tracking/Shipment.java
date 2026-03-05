@@ -13,6 +13,7 @@ import java.util.List;
 public class Shipment {
     private String id;
     private String trackingNumber;
-    private List<CargoDetail> cargoDetails;
+    private String status;
+    private Object cargo;
     private List<Document> documents;
 }

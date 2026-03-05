@@ -36,7 +36,7 @@ public class GetCurrentTrackingUseCase {
                             .trackingId(shipmentInfo.getTrackingNumber()) // #SHP-C8F3 real
                             .status(lastEvent.getStatus())
                             .currentLocation(lastEvent.getCity() + ", " + lastEvent.getCountryCode())
-                            .cargoDetails(shipmentInfo.getCargoDetails())
+                            .cargo(shipmentInfo.getCargo())
                             .documents(shipmentInfo.getDocuments())
                             .build());
         });

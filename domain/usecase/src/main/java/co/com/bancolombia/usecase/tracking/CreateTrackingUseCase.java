@@ -48,7 +48,7 @@ public class CreateTrackingUseCase {
                             .status(event.getStatus())
                             .currentLocation(event.getCity())
                             .truckPositions(new TruckPositions(initialPos, initialPos))
-                            .cargoDetails(new java.util.ArrayList<>())
+                            .cargo(null)
                             .documents(new java.util.ArrayList<>())
                             .build();
                 });
