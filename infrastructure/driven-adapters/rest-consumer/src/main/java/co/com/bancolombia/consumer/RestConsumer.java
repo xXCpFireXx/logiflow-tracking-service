@@ -1,8 +1,8 @@
 package co.com.bancolombia.consumer;
 
 import co.com.bancolombia.consumer.dto.ShipmentResponse;
-import co.com.bancolombia.model.tracking.Document;
-import co.com.bancolombia.model.tracking.Shipment;
+import co.com.bancolombia.consumer.dto.CardDetailResponse; // Import necesario para el helper
+import co.com.bancolombia.model.tracking.*; // Para Shipment, Document, ShipmentDetails, DetailItem
 import co.com.bancolombia.model.tracking.gateways.ShipmentGateway;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
@@ -17,27 +17,15 @@ import java.util.ArrayList;
 public class RestConsumer implements ShipmentGateway {
     private final WebClient client;
 
-    // These methods are an example that illustrates the implementation of WebClient.
-    // You should use the methods that you implement from the Gateway from the domain.
-    @CircuitBreaker(name = "testGet" /*, fallbackMethod = "testGetOk"*/) // This name should match with settings name in application.yaml
+    @CircuitBreaker(name = "testGet")
     public Mono<ObjectResponse> testGet() {
-        return client
-                .get()
-                .retrieve()
-                .bodyToMono(ObjectResponse.class);
+        return client.get().retrieve().bodyToMono(ObjectResponse.class);
     }
 
-    @CircuitBreaker(name = "testPost") // This name should match with settings name in application.yaml
+    @CircuitBreaker(name = "testPost")
     public Mono<ObjectResponse> testPost() {
-        ObjectRequest request = ObjectRequest.builder()
-            .val1("exampleval1")
-            .val2("exampleval2")
-            .build();
-        return client
-                .post()
-                .body(Mono.just(request), ObjectRequest.class)
-                .retrieve()
-                .bodyToMono(ObjectResponse.class);
+        ObjectRequest request = ObjectRequest.builder().val1("val1").val2("val2").build();
+        return client.post().body(Mono.just(request), ObjectRequest.class).retrieve().bodyToMono(ObjectResponse.class);
     }
 
     @Override
@@ -46,20 +34,46 @@ public class RestConsumer implements ShipmentGateway {
                 .uri("/shipments/" + shipmentId)
                 .retrieve()
                 .bodyToMono(ShipmentResponse.class)
-                .map(response -> Shipment.builder()
-                        .id(response.getId())
-                        .trackingNumber(response.getTrackingNumber())
-                        .status(response.getStatus())
-                        .cargo(response.getCargo())
-                        .documents(response.getDocuments() != null ?
-                                response.getDocuments().stream()
-                                        .map(doc -> new Document(doc.getName(), doc.getFormat(), doc.getSize()))
-                                        .toList()
-                                : new ArrayList<>())
-                        .build())
+                .map(response -> {
+                    // Armamos los detalles de los cuadritos aquí mismo
+                    ShipmentDetails domainDetails = null;
+                    if (response.getDetails() != null) {
+                        domainDetails = ShipmentDetails.builder()
+                                .origin(mapItem(response.getDetails().getOrigin()))
+                                .destination(mapItem(response.getDetails().getDestination()))
+                                .carrier(mapItem(response.getDetails().getCarrier()))
+                                .weight(mapItem(response.getDetails().getWeight()))
+                                .build();
+                    }
+
+                    // Seguimos con tu lógica del builder
+                    return Shipment.builder()
+                            .id(response.getId())
+                            .trackingNumber(response.getTrackingNumber())
+                            .status(response.getStatus())
+                            .cargo(response.getCargo())
+                            .documents(response.getDocuments() != null ?
+                                    response.getDocuments().stream()
+                                            .map(doc -> new Document(doc.getName(), doc.getFormat(), doc.getSize()))
+                                            .toList()
+                                    : new ArrayList<>())
+                            // --- NUEVO CAMPO AGREGADO ---
+                            .details(domainDetails)
+                            .build();
+                })
                 .onErrorResume(e -> {
                     System.out.println("Error conectando a Shipment: " + e.getMessage());
                     return Mono.just(Shipment.builder().id(shipmentId).build());
                 });
+    }
+
+    // Helper privado dentro de la misma clase para no repetir código del "new DetailItem"
+    private DetailItem mapItem(CardDetailResponse item) {
+        if (item == null) return null;
+        return DetailItem.builder()
+                .label(item.getLabel())
+                .value(item.getValue())
+                .subtext(item.getSubtext()) // Aquí viaja el "Warehouse H-22"
+                .build();
     }
 }

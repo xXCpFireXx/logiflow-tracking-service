@@ -20,12 +20,14 @@ public class Tracking {
     private TruckPositions truckPositions;
     private Object cargo;
     private List<Document> documents;
+    private final ShipmentDetails details;
 
 
     // constructor (2) para crear trackings nuevos y para los Test
-    public Tracking(String shipmentId, String trackingId) {
+    public Tracking(String shipmentId, String trackingId, ShipmentDetails details) {
         this.shipmentId = shipmentId;
         this.trackingId = trackingId;
+        this.details = details;
         this.status = TrackingStatus.CREATED; // Estado inicial por defecto
         this.cargo = new ArrayList<>();
         this.documents = new ArrayList<>();
