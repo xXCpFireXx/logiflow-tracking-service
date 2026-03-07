@@ -24,4 +24,6 @@ public class ShipmentResponse {
     private CargoInfo cargo;
 
     private List<DocumentResponse> documents;
+
+    private UiDetailsResponse details;
 }

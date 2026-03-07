@@ -38,6 +38,7 @@ public class GetCurrentTrackingUseCase {
                             .currentLocation(lastEvent.getCity() + ", " + lastEvent.getCountryCode())
                             .cargo(shipmentInfo.getCargo())
                             .documents(shipmentInfo.getDocuments())
+                            .details(shipmentInfo.getDetails())
                             .build());
         });
     }

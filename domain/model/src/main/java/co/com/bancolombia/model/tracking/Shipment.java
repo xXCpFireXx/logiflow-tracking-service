@@ -16,4 +16,5 @@ public class Shipment {
     private String status;
     private Object cargo;
     private List<Document> documents;
+    private ShipmentDetails details;
 }
