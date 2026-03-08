@@ -67,6 +67,20 @@ public class RestConsumer implements ShipmentGateway {
                 });
     }
 
+    @Override
+    public Mono<Void> updateShipmentStatus(String shipmentId, UpdateShipmentStatusRequest request) {
+        return client.patch()
+                .uri("/shipments/{id}/status", shipmentId)
+                .bodyValue(request) // Spring Boot convertirá automáticamente tu DTO a {"status": "OUT_FOR_DELIVERY"}
+                .retrieve()
+                .bodyToMono(Void.class)
+                .onErrorResume(e -> {
+                    // Si falla Shipment (está caído o el estado es inválido), lo registramos pero no rompemos el proceso de Tracking
+                    System.err.println("Fallo al actualizar el estado en Shipment: " + e.getMessage());
+                    return Mono.empty();
+                });
+    }
+
     // Helper privado dentro de la misma clase para no repetir código del "new DetailItem"
     private DetailItem mapItem(CardDetailResponse item) {
         if (item == null) return null;

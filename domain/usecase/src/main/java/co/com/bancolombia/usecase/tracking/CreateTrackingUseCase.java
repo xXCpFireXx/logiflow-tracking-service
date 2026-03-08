@@ -1,9 +1,6 @@
 package co.com.bancolombia.usecase.tracking;
 
-import co.com.bancolombia.model.tracking.Coordinate;
-import co.com.bancolombia.model.tracking.Tracking;
-import co.com.bancolombia.model.tracking.TrackingEvent;
-import co.com.bancolombia.model.tracking.TruckPositions;
+import co.com.bancolombia.model.tracking.*;
 import co.com.bancolombia.model.tracking.gateways.ShipmentGateway;
 import co.com.bancolombia.model.tracking.gateways.TrackingEventTruck;
 import co.com.bancolombia.model.tracking.gateways.TrackingRepository;
@@ -20,7 +17,7 @@ public class CreateTrackingUseCase {
         return repository.saveEvent(event)
                 .flatMap(savedEvent ->
                         repository.findByShipmentId(event.getShipmentId())
-                                .switchIfEmpty(Mono.defer(() -> createInitialTracking(event))) // Ahora es reactivo
+                                .switchIfEmpty(Mono.defer(() -> createInitialTracking(event)))
                                 .flatMap(current -> {
                                     current.updateLiveStatus(
                                             new Coordinate(event.getLatitude(), event.getLongitude()),
@@ -28,7 +25,15 @@ public class CreateTrackingUseCase {
                                             event.getCity()
                                     );
                                     return repository.save(current)
-                                            .doOnNext(eventTruck::emit); // se emite el sse
+                                            .doOnNext(eventTruck::emit);
+                                })
+                                // ¡NUEVA LÍNEA! -> Actualizar estado en el microservicio de Shipment
+                                .flatMap(tracking -> {
+                                    UpdateShipmentStatusRequest statusRequest = UpdateShipmentStatusRequest.builder()
+                                            .status(event.getStatus().name())
+                                            .build();
+
+                                    return shipmentGateway.updateShipmentStatus(event.getShipmentId(), statusRequest);
                                 })
                                 .thenReturn(savedEvent)
                 );
