@@ -8,40 +8,43 @@ class TrackingTest {
 
     @Test
     void should_update_location_when_status_is_not_delivered() {
-        Tracking tracking = new Tracking("65b2f1", "shp-001", "#SHP-2540");
+        // 1. Creamos los detalles del envío que ahora pide el constructor
+        ShipmentDetails details = new ShipmentDetails();
 
-        Coordinate blue = new Coordinate(10, 20);
-        Coordinate orange = new Coordinate(11, 21);
-        TruckPositions newPositions = new TruckPositions(blue, orange);
+        // 2. Usamos el constructor de 3 parámetros: (id, trackingId, shipmentDetails)
+        Tracking tracking = new Tracking("65b2f1", "#SHP-2540", details);
 
-        // Act
-        tracking.updateLiveStatus("New York Hub", newPositions);
+        Coordinate position = new Coordinate(10.0, 20.0);
+
+        // 3. El método ahora recibe: (Coordinate, TrackingStatus, String)
+        tracking.updateLiveStatus(position, TrackingStatus.IN_TRANSIT, "New York Hub");
 
         // Assert
         assertEquals("New York Hub", tracking.getCurrentLocation());
-        assertEquals(10, tracking.getTruckPositions().getBlue().getX());
+        assertEquals(10.0, tracking.getTruckPositions().getBlue().getLatitude());
     }
 
     @Test
     void should_throw_exception_when_updating_delivered_shipment() {
-        // Se usa el constructor 1 para forzar el estado DELIVERED
+        ShipmentDetails details = new ShipmentDetails();
+
+        // Usamos el constructor completo (8 parámetros) para forzar el estado DELIVERED
         Tracking tracking = new Tracking(
                 "65b2f1",           // id
-                "shp-001",          // shipmentId
                 "#SHP-2540",        // trackingId
-                TrackingStatus.DELIVERED, // STATUS
+                TrackingStatus.DELIVERED, // status
                 "Paris",            // currentLocation
-                null,               // truckPositions
+                new TruckPositions(new Coordinate(0.0,0.0), new Coordinate(0.0,0.0)), // truckPositions
                 new ArrayList<>(),  // history
-                new ArrayList<>(),  // cargoDetails
-                new ArrayList<>()   // documents
+                new ArrayList<>(),  // documents
+                details             // shipmentDetails
         );
 
-        TruckPositions newPositions = new TruckPositions(new Coordinate(1, 1), new Coordinate(2, 2));
+        Coordinate newPos = new Coordinate(1.0, 1.0);
 
-        // Act & Assert: Verificamos
+        // Verificamos que lance error si intentamos mover algo ya entregado
         assertThrows(IllegalStateException.class, () -> {
-            tracking.updateLiveStatus("London", newPositions);
+            tracking.updateLiveStatus(newPos, TrackingStatus.DELIVERED, "London");
         });
     }
 }
